@@ -117,12 +117,18 @@ def main() -> None:
     # We'll search a small window around the real key value 0xFFFFFFFFFF,
     # so you can see the brute-forcer succeed quickly.
     real_key_int = int.from_bytes(RC4_KEY_40_ONES, "big")
-    window = 50_000  # adjust as desired
+    window = 1E7  # 10 million keys to test (out of 1 trillion total possible)
+    window = int(window)
     start = max(0, real_key_int - window)
     end = min((1 << 40), real_key_int + 1)
 
     print(f"RC4 brute-force demo range: [{start:#x}, {end:#x}) (size {end-start:,})")
-    found_key, found_pt = brute_force_rc4_40bit( rc4_ct, known_plaintext=PLAINTEXT, start=start, end=end, report_every=10_000)
+    
+    #start timer
+    t0 = time.time()
+    found_key, found_pt = brute_force_rc4_40bit( rc4_ct, known_plaintext=PLAINTEXT, start=start, end=end, report_every=1_000_000)
+    elapsed = time.time() - t0
+    print(f"RC4 brute-force demo took {elapsed:.2f} seconds")
 
     if found_key is not None:
         print("\n[RC4 crack demo SUCCESS]")
