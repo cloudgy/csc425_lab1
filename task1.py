@@ -15,9 +15,8 @@ AES_KEY_128_ONES = b"\xFF" * 16
 RC4_KEY_40_ONES = b"\xFF" * 5
 
 
-# -----------------------
-# Encryption
-# -----------------------
+
+# Encryptio
 
 def aes_encrypt_cbc(plaintext: bytes, key: bytes) -> bytes:
     """
@@ -48,9 +47,8 @@ def rc4_decrypt(ciphertext: bytes, key: bytes) -> bytes:
     return cipher.decrypt(ciphertext)
 
 
-# -----------------------
+
 # "Cracking" attempts
-# -----------------------
 
 # This function came from ChatGPT 5.2
 def is_likely_english_ascii(b: bytes) -> bool:
