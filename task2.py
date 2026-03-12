@@ -15,7 +15,7 @@ def create_repeated_plaintext():
     # Repeated pattern to reveal ECB behavior
     return (block_A * 4) + (block_B * 4) + (block_A * 4)
 
-
+# Boilerplate encryption functions pulled from previous projects
 def encrypt_with_aes(mode_name, plaintext_bytes):
     if mode_name == "ECB":
         cipher = AES.new(aes_key, AES.MODE_ECB)
@@ -43,7 +43,7 @@ def encrypt_with_aes(mode_name, plaintext_bytes):
 
     raise ValueError("Unsupported mode")
 
-
+# Boilerplate decryption functions pulled from previous projects
 def decrypt_with_aes(mode_name, ciphertext_bytes, parameters):
     if mode_name == "ECB":
         cipher = AES.new(aes_key, AES.MODE_ECB)
@@ -67,7 +67,7 @@ def decrypt_with_aes(mode_name, ciphertext_bytes, parameters):
 
     raise ValueError("Unsupported mode")
 
-
+# Debugged using ChatGPT 5.2
 def check_pattern_preservation(plaintext_bytes, ciphertext_bytes):
     plaintext_blocks = split_into_blocks(plaintext_bytes, block_size)
     ciphertext_blocks = split_into_blocks(ciphertext_bytes, block_size)
@@ -93,7 +93,7 @@ def check_pattern_preservation(plaintext_bytes, ciphertext_bytes):
 
     return False
 
-
+# Debugged using ChatGPT 5.2
 def check_error_propagation(original_plaintext, mode_name, original_ciphertext, parameters):
     modified_ciphertext = bytearray(original_ciphertext)
 
