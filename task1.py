@@ -87,6 +87,55 @@ def brute_force_rc4_40bit(ciphertext: bytes, known_plaintext: Optional[bytes] = 
 
     return None, None
 
+def xor_bytes(a: bytes, b: bytes) -> bytes:
+    """XOR up to the shorter length."""
+    return bytes(x ^ y for x, y in zip(a, b))
+
+def rc4_reused_keystream_attack() -> None:
+
+    print("\nReused keystream attack demo (RC4):\n")
+
+    # two different messages of same length
+    p1 = b"Known message: attack at dawn. Bring explosive golf balls!!!!!"
+    p2 = b"Secret message: attack at dusk. Bring comically large anvils!!" 
+
+    # force lengths to be equal
+    n = min(len(p1), len(p2))
+    p1 = p1[:n]
+    p2 = p2[:n]
+
+    # Victim encrypts both with SAME KEY and fresh RC4 state each time.
+    # This reuses the keystream prefix.
+    c1 = rc4_encrypt(p1, RC4_KEY_40_ONES)
+    c2 = rc4_encrypt(p2, RC4_KEY_40_ONES)
+
+    print("P1:", p1)
+    print("P2:", p2)
+    print("C1:", c1)
+    print("C2:", c2)
+
+    # Property: C1 ^ C2 = P1 ^ P2
+    lhs = xor_bytes(c1, c2)
+    rhs = xor_bytes(p1, p2)
+    print("\nCheck: (C1 ^ C2) == (P1 ^ P2) ? ->", lhs == rhs)
+
+    # Attacker knows P1 (or guessed headers/fields)
+    # Recover keystream K = C1 ^ P1
+    recovered_keystream = xor_bytes(c1, p1)
+
+    # Decrypt P2 = C2 ^ K
+    recovered_p2 = xor_bytes(c2, recovered_keystream)
+
+    print("\nAttacker recovers keystream K = C1 ^ P1")
+    print("Recovered keystream:", recovered_keystream)
+
+    print("\nAttacker decrypts P2 using recovered keystream:")
+    print("Recovered P2:", recovered_p2)
+    print("Matches actual P2? ->", recovered_p2 == p2)
+
+    # even without knowing P1, attacker learns P1 ^ P2 (structure leak)
+    print("\nEven without P1, attacker learns P1 ^ P2 (structure leak):")
+    print("P1 ^ P2:", lhs)
 
 
 def main() -> None:
@@ -102,18 +151,14 @@ def main() -> None:
     print("AES-CBC ciphertext (IV||CT):", aes_ct)
     print("RC4 ciphertext:", rc4_ct)
 
-    # Show successful decrypt (for your own verification)
+    # Show successful decrypt
     print("\nVerification decrypt: \n")
     print("AES decrypted:", aes_decrypt_cbc(aes_ct, AES_KEY_128_ONES))
     print("RC4 decrypted:", rc4_decrypt(rc4_ct, RC4_KEY_40_ONES))
 
-
     print("\nCracking: \n")
 
-
-    # Here we do a *targeted demonstration*:
-    # We'll search a small window around the real key value 0xFFFFFFFFFF,
-    # so you can see the brute-forcer succeed quickly.
+    # Targeted demonstration brute-force window
     real_key_int = int.from_bytes(RC4_KEY_40_ONES, "big")
     window = 1E7  # 10 million keys to test (out of 1 trillion total possible)
     window = int(window)
@@ -121,10 +166,15 @@ def main() -> None:
     end = min((1 << 40), real_key_int + 1)
 
     print(f"RC4 brute-force demo range: [{start:#x}, {end:#x}) (size {end-start:,})")
-    
-    #start timer
+
     t0 = time.time()
-    found_key, found_pt = brute_force_rc4_40bit( rc4_ct, known_plaintext=PLAINTEXT, start=start, end=end, report_every=1_000_000)
+    found_key, found_pt = brute_force_rc4_40bit(
+        rc4_ct,
+        known_plaintext=PLAINTEXT,
+        start=start,
+        end=end,
+        report_every=1_000_000
+    )
     elapsed = time.time() - t0
     print(f"RC4 brute-force demo took {elapsed:.2f} seconds")
 
@@ -135,7 +185,11 @@ def main() -> None:
     else:
         print("\n[RC4 crack demo FAILED]")
 
+    # keystream attack demo
+    rc4_reused_keystream_attack()
 
 
+if __name__ == "__main__":
+    main()
 if __name__ == "__main__":
     main()
